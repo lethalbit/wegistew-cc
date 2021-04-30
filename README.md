@@ -4,6 +4,21 @@ wegistew is a single C++ header that allows for you to interact with hardware re
 
 With wegistew, everything but the actual register access is done in the type system at compile time, meaning that only the actual calls to get or set the register are actually generated as machine code, the rest of  it is seamlessly optimized away.
 
+## Installing
+
+Because wegistew is a single header library, to install it you can either just download a copy and drop it in your source tree.
+
+Alternatively use it as a meson subproject, it exports a `wegistew_dep` dependency you can just polp into your target.
+
+Lastly, you can install it system-wide by using meson:
+
+```
+meson build
+ninja -C build install
+```
+
+The default location is `/usr/local/include` but this can be changed by setting the environment variable `DESTDIR` to the prefix prior to running the `ninja -C build install` command.
+
 ## Examples
 
 The following examples so some uses for wegistew.
