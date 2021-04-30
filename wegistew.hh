@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: BSD-3-Clause */
+/* wegistew v0.0.1 - https://github.com/lethalbit/wegistew-cc */
 /* wegistew.hh - TODO: Description */
 #pragma once
 #if !defined(WEGISTEW_HH)
