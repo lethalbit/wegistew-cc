@@ -35,10 +35,22 @@ namespace wegistew {
 			static constexpr std::uintptr_t addr = address;
 
 			/* Get the value of this field in the given register */
-			static inline constexpr auto get() noexcept {
+			template<typename V>
+			static inline constexpr
+			std::enable_if_t<!std::is_enum_v<V>, V> get() noexcept {
 				const auto reg =  reinterpret_cast<T*>(addr);
 
-				return (vu_type((*reg) & computed_mask) >> size);
+				return (vu_type((*reg) & computed_mask) >> lsb);
+			}
+
+			template<typename V>
+			static inline constexpr
+			std::enable_if_t<std::is_enum_v<V>, V> get() noexcept {
+				const auto reg =  reinterpret_cast<T*>(addr);
+
+				return static_cast<V>(
+					vu_type((*reg) & computed_mask) >> lsb
+				);
 			}
 
 			/* Set the value of this field in the given register */
@@ -47,7 +59,7 @@ namespace wegistew {
             std::enable_if_t<!std::is_enum_v<V>> set(const V v) noexcept {
 				const auto reg =  reinterpret_cast<V*>(addr);
 
-				(*reg) |= ((vu_type(v) << size) & computed_mask);
+				(*reg) = (((*reg) & ~computed_mask) | ((vu_type(v) << lsb) & computed_mask));
 			}
 
             template<typename V>
@@ -56,7 +68,7 @@ namespace wegistew {
                 using Vt = typename std::underlying_type_t<V>;
 				const auto reg =  reinterpret_cast<Vt*>(addr);
 
-				(*reg) |= ((vu_type(v) << size) & computed_mask);
+				(*reg) = (((*reg) & ~computed_mask) | ((vu_type(v) << lsb) & computed_mask));
 			}
 		};
 	};
@@ -96,14 +108,14 @@ namespace wegistew {
 		using field = typename type_at_index_t<idx, U...>::type::template field<T, address>;
 
 		/* This is functionally equivalent to ::fields<idx>::get() */
-		template<std::size_t idx>
+		template<typename V, std::size_t idx>
 		static inline constexpr auto get() noexcept {
 			static_assert(idx < field_count);
-			return field<idx>::get();
+			return field<idx>::template get<V>();
 		}
 
 		/* This is functionally equivalent to ::fields<idx>::set(v) */
-		template<std::size_t idx, typename V>
+		template<typename V, std::size_t idx>
 		static inline constexpr void set(const V v) noexcept {
 			static_assert(idx < field_count);
 			field<idx>::set(v);
