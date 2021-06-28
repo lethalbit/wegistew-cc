@@ -36,6 +36,7 @@ namespace wegistew {
 
 			/* Get the value of this field in the given register */
 			template<typename V = vu_type>
+			[[nodiscard]]
 			static inline constexpr
 			std::enable_if_t<!std::is_enum<V>::value, V> get() noexcept {
 				const auto reg =  reinterpret_cast<T*>(addr);
@@ -44,6 +45,7 @@ namespace wegistew {
 			}
 
 			template<typename V = vu_type>
+			[[nodiscard]]
 			static inline constexpr
 			std::enable_if_t<std::is_enum<V>::value, V> get() noexcept {
 				const auto reg =  reinterpret_cast<T*>(addr);
@@ -55,6 +57,7 @@ namespace wegistew {
 
 			/* Set the value of this field in the given register */
             template<typename V>
+            [[nodiscard]]
 			static inline constexpr
             std::enable_if_t<!std::is_enum<V>::value> set(const V v) noexcept {
 				const auto reg =  reinterpret_cast<V*>(addr);
@@ -63,6 +66,7 @@ namespace wegistew {
 			}
 
             template<typename V>
+            [[nodiscard]]
 			static inline constexpr
             std::enable_if_t<std::is_enum<V>::value> set(const V v) noexcept {
                 using Vt = typename std::underlying_type_t<V>;
@@ -87,12 +91,14 @@ namespace wegistew {
 
 			/* Get the value of this field in the given register */
 			template<typename V = vu_type>
+			[[nodiscard]]
 			static inline constexpr
 			std::enable_if_t<!std::is_enum<V>::value, V> get(const V v) noexcept {
 				return (vu_type((v) & computed_mask) >> lsb);
 			}
 
 			template<typename V = vu_type>
+			[[nodiscard]]
 			static inline constexpr
 			std::enable_if_t<std::is_enum<V>::value, V> get(const V v) noexcept {
 				return static_cast<V>(
@@ -102,6 +108,7 @@ namespace wegistew {
 
 			/* Set the value of this field in the given register */
             template<typename V>
+            [[nodiscard]]
 			static inline constexpr
             std::enable_if_t<!std::is_enum<V>::value> set(V& f, const V v) noexcept {
 
@@ -109,6 +116,7 @@ namespace wegistew {
 			}
 
             template<typename V>
+            [[nodiscard]]
 			static inline constexpr
             std::enable_if_t<std::is_enum<V>::value> set(V& f, const V v) noexcept {
                 using Vt = typename std::underlying_type_t<V>;
@@ -154,6 +162,7 @@ namespace wegistew {
 
 		/* This is functionally equivalent to ::fields<idx>::get() */
 		template<std::size_t idx, typename V = vu_type>
+		[[nodiscard]]
 		static inline constexpr auto get() noexcept {
 			static_assert(idx < field_count, "field index out of range");
 			return field<idx>::template get<V>();
@@ -161,17 +170,20 @@ namespace wegistew {
 
 		/* This is functionally equivalent to ::fields<idx>::set(v) */
 		template<std::size_t idx, typename V>
+		[[nodiscard]]
 		static inline constexpr void set(const V v) noexcept {
 			static_assert(idx < field_count, "field index out of range");
 			field<idx>::set(v);
 		}
 
 		/* register-wide getter / setter */
+		[[nodiscard]]
 		inline T& operator*() const noexcept {
 			const auto reg =  reinterpret_cast<T*>(addr);
 			return *reg;
 		}
 
+		[[nodiscard]]
 		const inline T& operator*() noexcept {
 			const auto reg =  reinterpret_cast<T*>(addr);
 			return *reg;
@@ -195,6 +207,7 @@ namespace wegistew {
 
 		/* This is functionally equivalent to ::fields<idx>::get() */
 		template<std::size_t idx, typename V = vu_type>
+		[[nodiscard]]
 		static inline constexpr auto get(const V v) noexcept {
 			static_assert(idx < field_count, "field index out of range");
 			return field<idx>::template get<V>(v);
@@ -202,6 +215,7 @@ namespace wegistew {
 
 		/* This is functionally equivalent to ::fields<idx>::set(v) */
 		template<std::size_t idx, typename V>
+		[[nodiscard]]
 		static inline constexpr void set(V& f, const V v) noexcept {
 			static_assert(idx < field_count, "field index out of range");
 			field<idx>::set(f, v);
