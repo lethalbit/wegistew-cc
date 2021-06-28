@@ -5,7 +5,7 @@ project(
 		'cpp_std=c++17',
 		'warning_level=3',
 	],
-	version: '0.0.2',
+	version: '0.0.3',
 	license: [
 		'BSD-3-Clause',
 	],

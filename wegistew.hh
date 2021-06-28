@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: BSD-3-Clause */
-/* wegistew v0.0.1 - https://github.com/lethalbit/wegistew-cc */
+/* wegistew v0.0.3 - https://github.com/lethalbit/wegistew-cc */
 /* wegistew.hh - Compile-time register grokking */
 #pragma once
 #if !defined(WEGISTEW_HH)
