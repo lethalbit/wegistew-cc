@@ -22,7 +22,7 @@ namespace wegistew {
 
 		/* Internal register field machinery */
 		template<typename T, std::uintptr_t address, std::size_t _msb_ = _msb, std::size_t _lsb_ = _lsb>
-		struct field final {
+		struct memaddr_field final {
 			using value_type = T;
 			using vu_type = typename std::make_unsigned_t<value_type>;
 
@@ -71,6 +71,51 @@ namespace wegistew {
 				(*reg) = (((*reg) & ~computed_mask) | ((vu_type(v) << lsb) & computed_mask));
 			}
 		};
+
+		/* Value field machinery */
+		template<typename T, std::size_t _msb_ = _msb, std::size_t _lsb_ = _lsb>
+		struct field final {
+			using value_type = T;
+			using vu_type = typename std::make_unsigned_t<value_type>;
+
+			static constexpr auto msb = _msb_;
+			static constexpr auto lsb = _lsb_;
+			static constexpr std::size_t width = std::numeric_limits<vu_type>::digits;
+			static_assert(msb <= width, "MSB must be less than or equal to the width of the bitspan type");
+			static constexpr vu_type computed_mask = (((vu_type(1) << (vu_type(msb) + vu_type(1)) - vu_type(lsb)) - vu_type(1)) << vu_type(lsb));
+
+
+			/* Get the value of this field in the given register */
+			template<typename V = vu_type>
+			static inline constexpr
+			std::enable_if_t<!std::is_enum<V>::value, V> get(const V v) noexcept {
+				return (vu_type((v) & computed_mask) >> lsb);
+			}
+
+			template<typename V = vu_type>
+			static inline constexpr
+			std::enable_if_t<std::is_enum<V>::value, V> get(const V v) noexcept {
+				return static_cast<V>(
+					vu_type((v) & computed_mask) >> lsb
+				);
+			}
+
+			/* Set the value of this field in the given register */
+            template<typename V>
+			static inline constexpr
+            std::enable_if_t<!std::is_enum<V>::value> set(V& f, const V v) noexcept {
+
+				f = (((f) & ~computed_mask) | ((vu_type(v) << lsb) & computed_mask));
+			}
+
+            template<typename V>
+			static inline constexpr
+            std::enable_if_t<std::is_enum<V>::value> set(V& f, const V v) noexcept {
+                using Vt = typename std::underlying_type_t<V>;
+
+				f = (((f) & ~computed_mask) | ((vu_type(v) << lsb) & computed_mask));
+			}
+		};
 	};
 
 	/* A "specialization" of genmask_t for a single bit field */
@@ -105,7 +150,7 @@ namespace wegistew {
 
 		/* Returns the field requested by index */
 		template<std::size_t idx>
-		using field = typename type_at_index_t<idx, U...>::type::template field<T, address>;
+		using field = typename type_at_index_t<idx, U...>::type::template memaddr_field<T, address>;
 
 		/* This is functionally equivalent to ::fields<idx>::get() */
 		template<std::size_t idx, typename V = vu_type>
@@ -130,6 +175,36 @@ namespace wegistew {
 		const inline T& operator*() noexcept {
 			const auto reg =  reinterpret_cast<T*>(addr);
 			return *reg;
+		}
+
+	};
+
+	/* Like wegistew_t but for dealing with values passed in rather than memory mapped registers */
+	template<typename T, typename... U>
+	struct bitfield_t final {
+		using value_type = T;
+		using vu_type = typename std::make_unsigned_t<value_type>;
+
+		static constexpr auto width = std::numeric_limits<T>::digits;
+		static constexpr auto size = width;
+		static constexpr std::size_t field_count = sizeof... (U);
+
+		/* Returns the field requested by index */
+		template<std::size_t idx>
+		using field = typename type_at_index_t<idx, U...>::type::template field<T>;
+
+		/* This is functionally equivalent to ::fields<idx>::get() */
+		template<std::size_t idx, typename V = vu_type>
+		static inline constexpr auto get(const V v) noexcept {
+			static_assert(idx < field_count, "field index out of range");
+			return field<idx>::template get<V>(v);
+		}
+
+		/* This is functionally equivalent to ::fields<idx>::set(v) */
+		template<std::size_t idx, typename V>
+		static inline constexpr void set(V& f, const V v) noexcept {
+			static_assert(idx < field_count, "field index out of range");
+			field<idx>::set(f, v);
 		}
 
 	};
