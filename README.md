@@ -8,7 +8,7 @@ With wegistew, everything but the actual register access is done in the type sys
 
 Because wegistew is a single header library, to install it you can either just download a copy and drop it in your source tree.
 
-Alternatively use it as a meson subproject, it exports a `wegistew_dep` dependency you can just polp into your target.
+Alternatively use it as a meson subproject, it exports a `wegistew_dep` dependency you can just plop into your target.
 
 Lastly, you can install it system-wide by using meson:
 
@@ -22,6 +22,8 @@ The default location is `/usr/local/include` but this can be changed by setting 
 ## Examples
 
 The following examples so some uses for wegistew.
+
+All of which are on [compiler explorer](https://godbolt.org/z/8EbfeGcxh) ([https://godbolt.org/z/8EbfeGcxh](https://godbolt.org/z/8EbfeGcxh)) for you to play with.
 
 ### Defining a Register
 
