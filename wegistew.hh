@@ -108,7 +108,7 @@ namespace wegistew {
 		using field = typename type_at_index_t<idx, U...>::type::template field<T, address>;
 
 		/* This is functionally equivalent to ::fields<idx>::get() */
-		template<std::size_t idx, typename V>
+		template<std::size_t idx, typename V = vu_type>
 		static inline constexpr auto get() noexcept {
 			static_assert(idx < field_count, "field index out of range");
 			return field<idx>::template get<V>();
