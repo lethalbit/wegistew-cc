@@ -18,7 +18,7 @@ namespace wegistew {
 	template<std::size_t _lsb, std::size_t _msb>
 	struct bitspan_t final {
 		static constexpr std::size_t size = (_msb - _lsb) + 1;
-		static_assert(_lsb <= _msb);
+		static_assert(_lsb <= _msb, "bitspan LSB must be smaller than or equal to the MSB");
 
 		/* Internal register field machinery */
 		template<typename T, std::uintptr_t address, std::size_t _msb_ = _msb, std::size_t _lsb_ = _lsb>
@@ -29,7 +29,7 @@ namespace wegistew {
 			static constexpr auto msb = _msb_;
 			static constexpr auto lsb = _lsb_;
 			static constexpr std::size_t width = std::numeric_limits<vu_type>::digits;
-			static_assert(msb <= width);
+			static_assert(msb <= width, "MSB must be less than or equal to the width of the bitspan type");
 			static constexpr vu_type computed_mask = (((vu_type(1) << (vu_type(msb) + vu_type(1)) - vu_type(lsb)) - vu_type(1)) << vu_type(lsb));
 
 			static constexpr std::uintptr_t addr = address;
@@ -110,14 +110,14 @@ namespace wegistew {
 		/* This is functionally equivalent to ::fields<idx>::get() */
 		template<typename V, std::size_t idx>
 		static inline constexpr auto get() noexcept {
-			static_assert(idx < field_count);
+			static_assert(idx < field_count, "field index out of range");
 			return field<idx>::template get<V>();
 		}
 
 		/* This is functionally equivalent to ::fields<idx>::set(v) */
 		template<typename V, std::size_t idx>
 		static inline constexpr void set(const V v) noexcept {
-			static_assert(idx < field_count);
+			static_assert(idx < field_count, "field index out of range");
 			field<idx>::set(v);
 		}
 
