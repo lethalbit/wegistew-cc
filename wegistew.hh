@@ -39,7 +39,7 @@ namespace wegistew {
 			[[nodiscard]]
 			static inline constexpr
 			std::enable_if_t<!std::is_enum<V>::value, V> get() noexcept {
-				const auto reg =  reinterpret_cast<T*>(addr);
+				const auto reg =  reinterpret_cast<volatile T*>(addr);
 
 				return (vu_type((*reg) & computed_mask) >> lsb);
 			}
@@ -48,7 +48,7 @@ namespace wegistew {
 			[[nodiscard]]
 			static inline constexpr
 			std::enable_if_t<std::is_enum<V>::value, V> get() noexcept {
-				const auto reg =  reinterpret_cast<T*>(addr);
+				const auto reg =  reinterpret_cast<volatile T*>(addr);
 
 				return static_cast<V>(
 					vu_type((*reg) & computed_mask) >> lsb
@@ -57,22 +57,30 @@ namespace wegistew {
 
 			/* Set the value of this field in the given register */
             template<typename V>
-            [[nodiscard]]
 			static inline constexpr
             std::enable_if_t<!std::is_enum<V>::value> set(const V v) noexcept {
-				const auto reg =  reinterpret_cast<V*>(addr);
-
-				(*reg) = (((*reg) & ~computed_mask) | ((vu_type(v) << lsb) & computed_mask));
+				const auto reg =  reinterpret_cast<volatile V*>(addr);
+				
+				// If masking out something in the size of the type being written results in a complete overwrite, skip the unnecessary read
+				if constexpr (V(~computed_mask) == 0) {
+					(*reg) = (vu_type(v) << lsb) & computed_mask;
+				} else {
+					(*reg) = (((*reg) & ~computed_mask) | ((vu_type(v) << lsb) & computed_mask));
+				}
 			}
 
             template<typename V>
-            [[nodiscard]]
 			static inline constexpr
             std::enable_if_t<std::is_enum<V>::value> set(const V v) noexcept {
                 using Vt = typename std::underlying_type_t<V>;
-				const auto reg =  reinterpret_cast<Vt*>(addr);
-
-				(*reg) = (((*reg) & ~computed_mask) | ((vu_type(v) << lsb) & computed_mask));
+				const auto reg = reinterpret_cast<volatile Vt*>(addr);
+				
+				// If masking out something in the size of the type being written results in a complete overwrite, skip the unnecessary read
+				if constexpr (Vt(~computed_mask) == 0) {
+					(*reg) = (vu_type(v) << lsb) & computed_mask;
+				} else {
+					(*reg) = (((*reg) & ~computed_mask) | ((vu_type(v) << lsb) & computed_mask));
+				}
 			}
 		};
 
@@ -108,19 +116,8 @@ namespace wegistew {
 
 			/* Set the value of this field in the given register */
             template<typename V>
-            [[nodiscard]]
 			static inline constexpr
-            std::enable_if_t<!std::is_enum<V>::value> set(V& f, const V v) noexcept {
-
-				f = (((f) & ~computed_mask) | ((vu_type(v) << lsb) & computed_mask));
-			}
-
-            template<typename V>
-            [[nodiscard]]
-			static inline constexpr
-            std::enable_if_t<std::is_enum<V>::value> set(V& f, const V v) noexcept {
-                using Vt = typename std::underlying_type_t<V>;
-
+            void set(V& f, const V v) noexcept {
 				f = (((f) & ~computed_mask) | ((vu_type(v) << lsb) & computed_mask));
 			}
 		};
@@ -170,7 +167,6 @@ namespace wegistew {
 
 		/* This is functionally equivalent to ::fields<idx>::set(v) */
 		template<std::size_t idx, typename V>
-		[[nodiscard]]
 		static inline constexpr void set(const V v) noexcept {
 			static_assert(idx < field_count, "field index out of range");
 			field<idx>::set(v);
@@ -178,14 +174,14 @@ namespace wegistew {
 
 		/* register-wide getter / setter */
 		[[nodiscard]]
-		inline T& operator*() const noexcept {
-			const auto reg =  reinterpret_cast<T*>(addr);
+		inline volatile T& operator*() const noexcept {
+			const auto reg =  reinterpret_cast<volatile T*>(addr);
 			return *reg;
 		}
 
 		[[nodiscard]]
-		const inline T& operator*() noexcept {
-			const auto reg =  reinterpret_cast<T*>(addr);
+		const volatile inline T& operator*() noexcept {
+			const auto reg =  reinterpret_cast<volatile T*>(addr);
 			return *reg;
 		}
 
@@ -215,7 +211,6 @@ namespace wegistew {
 
 		/* This is functionally equivalent to ::fields<idx>::set(v) */
 		template<std::size_t idx, typename V>
-		[[nodiscard]]
 		static inline constexpr void set(V& f, const V v) noexcept {
 			static_assert(idx < field_count, "field index out of range");
 			field<idx>::set(f, v);
